@@ -1,9 +1,0 @@
-# pack-refs with: peeled fully-peeled 
-a6df7e73966c65594ae4c35c89b3e691d0fe9c44 refs/remotes/origin/Starter-code
-ddeddfafedbba410077dba6b729b4f4005759864 refs/remotes/origin/audio_assets
-f327c072027c52cff6d4059872af648ffd0f903c refs/remotes/origin/image_assets
-8b2ceee896ac93135872b2ce05fac3ee32dd88d6 refs/remotes/origin/lesson-five
-26304b95cb512e2f08786471f7048bd1f1bf1d6e refs/remotes/origin/lesson-four
-a9564ae1f0cbc3358bb62a8b8c83b3f6b59b61ca refs/remotes/origin/lesson-one
-adf90d17fa802b2b5229d29faebee4b3991017b1 refs/remotes/origin/lesson-three
-534b9a382dc0aaab47a87a808e101b3bdc8073c3 refs/remotes/origin/lesson-two
