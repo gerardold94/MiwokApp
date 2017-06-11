@@ -1,4 +1,4 @@
-package com.example.android.miwok;
+package com.example.android.miwok.Models;
 
 /**
  * Created by gerardo on 06/06/17.

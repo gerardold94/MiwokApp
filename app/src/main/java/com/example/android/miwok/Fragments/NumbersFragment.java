@@ -1,41 +1,81 @@
-/*
- * Copyright (C) 2016 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.example.android.miwok;
+package com.example.android.miwok.Fragments;
+
 
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.example.android.miwok.R;
+import com.example.android.miwok.Models.Word;
+import com.example.android.miwok.Adapters.WordAdapter;
+
 import java.util.ArrayList;
 
-public class NumbersActivity extends AppCompatActivity {
+/**
+ * Numbers {@link Fragment}.
+ */
+public class NumbersFragment extends Fragment {
+
 
     private MediaPlayer mPlayer;
     private AudioManager am;
-    private AudioManager.OnAudioFocusChangeListener afChangeListener;
+
+    /**
+     * This listener gets triggered whenever the audio focus changes
+     * (i.e., we gain or lose audio focus because of another app or device).
+     */
+    private AudioManager.OnAudioFocusChangeListener afChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+
+        @Override
+        public void onAudioFocusChange(int focusChange) {
+            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+                mPlayer.pause();
+                mPlayer.seekTo(0);
+            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                mPlayer.stop();
+                releaseMediaPlayer();
+                am.abandonAudioFocus(afChangeListener);
+            } else if (focusChange ==
+                    AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                mPlayer.setVolume(0.2f, 0.2f);
+            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+                if (mPlayer.isPlaying()) {
+                    mPlayer.setVolume(1.0f, 1.0f);
+                } else {
+                    mPlayer.start();
+                }
+            }
+        }
+    };
+
+    /**
+     * This listener gets triggered when the {@link MediaPlayer} has completed
+     * playing the audio file.
+     */
+    private MediaPlayer.OnCompletionListener mCompletionListener = new MediaPlayer.OnCompletionListener() {
+        @Override
+        public void onCompletion(MediaPlayer mp) {
+            releaseMediaPlayer();
+        }
+    };
+
+    public NumbersFragment() {
+        // Required empty public constructor
+    }
+
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.word_list);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+
+        View rootView = inflater.inflate(R.layout.word_list, container, false);
 
         final ArrayList<Word> words = new ArrayList<>();
         words.add(new Word("one", "lutti", R.raw.number_one, R.drawable.number_one));
@@ -49,34 +89,12 @@ public class NumbersActivity extends AppCompatActivity {
         words.add(new Word("nine", "wo’e", R.raw.number_nine, R.drawable.number_nine));
         words.add(new Word("ten", "na’aacha", R.raw.number_ten, R.drawable.number_ten));
 
-        WordAdapter adapter = new WordAdapter(this, words, R.color.category_numbers);
+        WordAdapter adapter = new WordAdapter(getActivity(), words, R.color.category_numbers);
 
-        ListView listView = (ListView) findViewById(R.id.list);
+        ListView listView = (ListView) rootView.findViewById(R.id.list);
         listView.setAdapter(adapter);
 
-        am = (AudioManager) getApplicationContext().getSystemService(Context.AUDIO_SERVICE);
-        afChangeListener = new AudioManager.OnAudioFocusChangeListener() {
-            @Override
-            public void onAudioFocusChange(int focusChange) {
-                if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
-                    mPlayer.pause();
-                    mPlayer.seekTo(0);
-                } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-                    mPlayer.stop();
-                    releaseMediaPlayer();
-                    am.abandonAudioFocus(afChangeListener);
-                } else if (focusChange ==
-                        AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
-                    mPlayer.setVolume(0.2f, 0.2f);
-                } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
-                    if(mPlayer.isPlaying()) {
-                        mPlayer.setVolume(1.0f, 1.0f);
-                    } else {
-                        mPlayer.start();
-                    }
-                }
-            }
-        };
+        am = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
 
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -89,23 +107,19 @@ public class NumbersActivity extends AppCompatActivity {
                 int result = am.requestAudioFocus(afChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 
                 if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                    mPlayer = MediaPlayer.create(getApplicationContext(), currentWord.getmAudioResourceId());
+                    mPlayer = MediaPlayer.create(getActivity(), currentWord.getmAudioResourceId());
                     mPlayer.start();
 
-                    mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                        @Override
-                        public void onCompletion(MediaPlayer mp) {
-                            releaseMediaPlayer();
-                        }
-                    });
+                    mPlayer.setOnCompletionListener(mCompletionListener);
                 }
             }
         });
 
+        return rootView;
     }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
         super.onStop();
         releaseMediaPlayer();
     }
@@ -128,4 +142,5 @@ public class NumbersActivity extends AppCompatActivity {
             mPlayer = null;
         }
     }
+
 }
